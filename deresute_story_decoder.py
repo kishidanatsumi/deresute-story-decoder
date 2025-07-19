@@ -109,8 +109,8 @@ for input_file in input_files:
 		with open(output_file, 'w',encoding='utf-8') as outfile:
 			print("output file:",output_file)
 			for data in cmd_list:
-				outfile.write("id:"+str(data[0])+" | cmd:"+str(dic_cmd.get(data[0])))
-				outfile.write("data:"+str(data[1]))
+				outfile.write("id:"+str(data[0])+" | cmd:"+str(dic_cmd.get(data[0]))+'\n')
+				outfile.write("data:"+str(data[1])+'\n\n')
 
 	else:
 		#print("input file:",input_file,"unmatch")
