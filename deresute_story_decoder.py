@@ -25,8 +25,7 @@ def SplitCommandByteRow(byte_list: bytearray, array_size: int) -> list:
 	result= []
 	i = 2
 	while (i < array_size):
-		row: List[bytes] = []
-		# Get 2 bytes, reverse
+		row=[]
 		array2 = byte_list[i-2:i]
 		array2 = array2[::-1]
 		row.append(bytes(array2))
@@ -37,7 +36,6 @@ def SplitCommandByteRow(byte_list: bytearray, array_size: int) -> list:
 			if len(array) < 4:
 				break
 			num2 = int.from_bytes(array, byteorder='little', signed=True)
-			#print(num2)
 			if num2 == 0:
 				break
 			array3 = byte_list[num+4:num+4+num2]
@@ -55,12 +53,11 @@ def bit_inverse(byte_in: bytearray) -> bytearray:
 		if i % 3 == 0:
 			byte_out.append((~byte_in[i]) & 0xFF)
 		else:
-                    			byte_out.append(byte_in[i])
+			byte_out.append(byte_in[i])
 	return byte_out
 
 def ConvertStringArgs(byte_args: bytearray) -> bytearray:
 	byte_args_inv=bit_inverse(byte_args)
-	#print("byte_args in ConvertStringArgs length:",len(byte_args))
 	string = byte_args_inv.decode('utf-8')
 	bytes_decoded = base64.b64decode(string)
 	return bytes_decoded.decode('utf-8')
@@ -91,7 +88,6 @@ def ConvertBinaryToCommandList(byteData: bytearray) -> list:
 	return Deserialize(binary_data, binary_len)
 
 #main
-
 if not os.path.exists("./out"):
         os.mkdir("./out")
 
@@ -117,8 +113,4 @@ for input_file in input_files:
 		continue
 
 print('decode done')
-os.system('pause')
-
-
-
-
+#os.system('pause')
