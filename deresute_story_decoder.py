@@ -20,72 +20,47 @@ dic_cmd = {
 64:"novoice",65:"attract",66:"change",67:"fadeout_all",
 }
 
-def SplitCommandByteRow(byte_list: bytearray, array_size: int) -> list:
-	print("data size is",array_size);
+def SplitCommandByteRow(bytes_data: bytearray) -> list:
+	data_size=len(bytes_data)
 	result= []
-	i = 2
-	while (i < array_size):
-		row=[]
-		array2 = byte_list[i-2:i]
-		array2 = array2[::-1]
-		row.append(bytes(array2))
-		num = i
+	i = 0
+	while (i < data_size):
+		cmd_id=int.from_bytes(bytes_data[i:i+2], byteorder='big')
+		#print(bytes_data[i:i+2])
+		ptr = i+2
+		cmd_data=[]
 		while True:
-			array = byte_list[num:num+4]
-			array = array[::-1]
-			if len(array) < 4:
+			length = int.from_bytes(bytes_data[ptr:ptr+4], byteorder='big')
+			if ( length == 0 ):
 				break
-			num2 = int.from_bytes(array, byteorder='little', signed=True)
-			if num2 == 0:
-				break
-			array3 = byte_list[num+4:num+4+num2]
-			row.append(bytes(array3))
-			num += 4 + num2
-		i = num + 4
-		result.append(row)
-		i= i+2
+			data_byte = bytes_data[ptr+4:ptr+4+length]
+			cmd_data.append(bytes(data_byte))
+			ptr = ptr+4+length
+		i = ptr+4
+		cmd_data=DeserializeLine(cmd_data)
+		result.append([cmd_id,cmd_data])
 	return result
 
-def bit_inverse(byte_in: bytearray) -> bytearray:
+def BitInverse(byte_in: bytearray) -> bytearray:
 	num = len(byte_in)
 	byte_out=bytearray()
 	for i in range(num):
-		if i % 3 == 0:
+		if (i % 3 == 0):
 			byte_out.append((~byte_in[i]) & 0xFF)
 		else:
 			byte_out.append(byte_in[i])
 	return byte_out
 
-def ConvertStringArgs(byte_args: bytearray) -> bytearray:
-	byte_args_inv=bit_inverse(byte_args)
-	string = byte_args_inv.decode('utf-8')
-	bytes_decoded = base64.b64decode(string)
-	return bytes_decoded.decode('utf-8')
-
-
 def DeserializeLine(cmd_byte: list) -> list:
-	args = []
-	cmd_id = int.from_bytes(cmd_byte[0], byteorder='little', signed=False)
-	count = len(cmd_byte)
-	for i in range(1, count):
-		args.append(ConvertStringArgs(cmd_byte[i]))
-	if (args == []):
-		args.append("Null")
-                
-	return [cmd_id,args]
-
-def Deserialize(byteList: bytearray, arraySize: int) -> list:
-	data_list = SplitCommandByteRow(byteList, arraySize)
-	cmd_list=[]
-	for data in data_list:
-		cmd_out = DeserializeLine(data)
-		cmd_list.append(cmd_out)
-	return cmd_list
-
-def ConvertBinaryToCommandList(byteData: bytearray) -> list:
-	binary_data = byteData
-	binary_len = len(binary_data)
-	return Deserialize(binary_data, binary_len)
+	cmd_data = []
+	for i in range(0, len(cmd_byte)):
+		byte_args_inv=BitInverse(cmd_byte[i])
+		string_b64 = byte_args_inv.decode('utf-8')
+		bytes_decoded = base64.b64decode(string_b64)
+		cmd_data.append(bytes_decoded.decode('utf-8'))
+	if (cmd_data == []):
+		cmd_data.append("Null")
+	return cmd_data
 
 #main
 if not os.path.exists("./out"):
@@ -100,7 +75,7 @@ for input_file in input_files:
 		with open(os.path.basename(input_file), 'rb') as file:
 			bytes_data = file.read()
 		#list format:[id,data]
-		cmd_list = ConvertBinaryToCommandList(bytes_data)
+		cmd_list = SplitCommandByteRow(bytes_data)
 		output_file='./out/'+input_name+'.txt'
 		with open(output_file, 'w',encoding='utf-8') as outfile:
 			print("output file:",output_file)
@@ -109,8 +84,8 @@ for input_file in input_files:
 				outfile.write("data:"+str(data[1])+'\n\n')
 
 	else:
-		#print("input file:",input_file,"unmatch")
+		print("input file:",input_file,"unmatch")
 		continue
 
 print('decode done')
-#os.system('pause')
+os.system('pause')
